@@ -9,7 +9,7 @@
 #include <stdio.h>
 #include <time.h>
 
-#define CB_TARGET_FPS 30000
+#define CB_TARGET_FPS 30
 #define CB_FRAME_BUDGET (1000000000 / CB_TARGET_FPS)
 
 static SDL_Renderer* renderer = NULL;
