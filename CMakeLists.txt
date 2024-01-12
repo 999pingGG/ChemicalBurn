@@ -58,7 +58,7 @@ HAVE___ATTRIBUTE__UNUSED
 
 if (HAVE___ATTRIBUTE__UNUSED)
   add_definitions(-DHAVE___ATTRIBUTE__UNUSED)
-endif ()
+endif()
 
 check_c_source_compiles(
 "
@@ -70,9 +70,9 @@ HAVE___PRAGMA_WARNING_SUPPRESS
 
 if (HAVE___PRAGMA_WARNING_SUPPRESS)
   add_definitions(-DHAVE___PRAGMA_WARNING_SUPPRESS)
-endif ()
+endif()
 
-if (CMAKE_C_COMPILER_ID STREQUAL "Clang")
+if (CMAKE_C_COMPILER_ID STREQUAL "Clang" AND NOT CMAKE_C_COMPILER_FRONTEND_VARIANT STREQUAL "MSVC")
   add_executable(fuzzer src/fuzz_target.c src/settings.c)
   target_include_directories(fuzzer PRIVATE include)
   target_compile_options(fuzzer PRIVATE -g -O1 -fsanitize=fuzzer,address,undefined)
