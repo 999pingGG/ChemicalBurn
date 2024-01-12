@@ -27,4 +27,17 @@ typedef struct cb_simulation_settings_t {
   bool create_destroy_nodes, package_of_death;
 } cb_simulation_settings_t;
 
+typedef struct cb_video_settings_t {
+  cb_ivec2_t viewport_size;
+  bool vsync, fullscreen;
+} cb_video_settings_t;
+
+void cb_parse_settings(
+  char* settings,
+  cb_simulation_settings_t* simulation_settings,
+  cb_video_settings_t* video_settings
+);
+
+void cb_settings_read_from_storage(cb_simulation_settings_t* simulation_settings, cb_video_settings_t* video_settings);
+
 #endif

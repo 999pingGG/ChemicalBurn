@@ -3,6 +3,8 @@ project(ChemicalBurn C)
 
 set(CMAKE_C_STANDARD 17)
 
+add_definitions(-DCB_ORGANIZATION="elinge" -DCB_APP="ChemicalBurn")
+
 add_executable(ChemicalBurn
   src/main.c
   src/simulation.c
@@ -28,6 +30,7 @@ add_executable(ChemicalBurn
   src/package_queue.c
   include/chemicalburn/cb_math.h
   src/cb_math.c
+  src/settings.c
 )
 
 find_package(SDL3 REQUIRED CONFIG REQUIRED COMPONENTS SDL3)
@@ -68,3 +71,11 @@ HAVE___PRAGMA_WARNING_SUPPRESS
 if (HAVE___PRAGMA_WARNING_SUPPRESS)
   add_definitions(-DHAVE___PRAGMA_WARNING_SUPPRESS)
 endif ()
+
+if (CMAKE_C_COMPILER_ID STREQUAL "Clang")
+  add_executable(fuzzer src/fuzz_target.c src/settings.c)
+  target_include_directories(fuzzer PRIVATE include)
+  target_compile_options(fuzzer PRIVATE -g -O1 -fsanitize=fuzzer,address,undefined)
+  target_link_options(fuzzer PRIVATE -fsanitize=fuzzer,address,undefined)
+  target_link_libraries(fuzzer PRIVATE SDL3::SDL3)
+endif()

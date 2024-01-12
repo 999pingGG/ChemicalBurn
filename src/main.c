@@ -1,4 +1,5 @@
 #include "chemicalburn/cb_math.h"
+#include "chemicalburn/settings.h"
 #include "chemicalburn/simulation.h"
 #include "chemicalburn/util.h"
 
@@ -59,7 +60,7 @@ static void cb_draw_line(const cb_vec2_t* from, const cb_vec2_t* to, const float
 
   SDL_SetRenderDrawColor(renderer, color->r, color->g, color->b, color->a);
 
-  static const int indices[] = {0, 1, 2, 2, 3, 0};
+  static const int indices[] = { 0, 1, 2, 2, 3, 0 };
   SDL_RenderGeometry(renderer, NULL, vertices, CB_COUNTOF(vertices), indices, CB_COUNTOF(indices));
 }
 
@@ -84,9 +85,13 @@ static void cb_draw_triangle(const cb_vec2_t vertices[3], const cb_color_t* colo
 int main(int argc, char* argv[]) {
   int result = 0;
   SDL_Window* window = NULL;
-  cb_simulation_t simulation = {0};
+  cb_simulation_t simulation = { 0 };
 
   srand(time(NULL));
+
+  cb_simulation_settings_t simulation_settings;
+  cb_video_settings_t video_settings;
+  cb_settings_read_from_storage(&simulation_settings, &video_settings);
 
   if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS) < 0) {
     fprintf(stderr, "SDL initialization error: %s\n", SDL_GetError());
@@ -94,35 +99,50 @@ int main(int argc, char* argv[]) {
     goto exit;
   }
 
-  SDL_DisplayID* displays = SDL_GetDisplays(NULL);
-  if (!displays) {
-    fprintf(stderr, "SDL_GetDisplays() error: %s\n", SDL_GetError());
-    result = 2;
-    goto exit;
+  if (video_settings.fullscreen) {
+    SDL_DisplayID* displays = SDL_GetDisplays(NULL);
+    if (!displays) {
+      fprintf(stderr, "SDL_GetDisplays() error: %s\n", SDL_GetError());
+      result = 2;
+      goto exit;
+    }
+
+    const SDL_DisplayMode* display_mode = SDL_GetDesktopDisplayMode(*displays);
+    SDL_free(displays);
+    if (!display_mode) {
+      fprintf(stderr, "SDL_GetDesktopDisplayMode() error: %s\n", SDL_GetError());
+      result = 3;
+      goto exit;
+    }
+
+    simulation_settings.bounds = video_settings.viewport_size = (cb_ivec2_t){
+      .x = display_mode->w,
+      .y = display_mode->h,
+    };
   }
 
-  const SDL_DisplayMode* display_mode = SDL_GetDesktopDisplayMode(*displays);
-  SDL_free(displays);
-  if (!display_mode) {
-    fprintf(stderr, "SDL_GetDesktopDisplayMode() error: %s\n", SDL_GetError());
-    result = 3;
-    goto exit;
-  }
-
-  if (!(window = SDL_CreateWindow("ChemicalBurn", display_mode->w, display_mode->h, SDL_WINDOW_FULLSCREEN))) {
+  if (!(window = SDL_CreateWindow(
+    CB_APP,
+    video_settings.viewport_size.x,
+    video_settings.viewport_size.y,
+    video_settings.fullscreen ? SDL_WINDOW_FULLSCREEN : 0
+  ))) {
     fprintf(stderr, "SDL_CreateWindow() error: %s\n", SDL_GetError());
     result = 4;
     goto exit;
   }
 
-  if (!(renderer = SDL_CreateRenderer(window, 0, SDL_RENDERER_ACCELERATED))) {
+  if (!(renderer = SDL_CreateRenderer(
+    window,
+    NULL,
+    SDL_RENDERER_ACCELERATED | (video_settings.vsync ? SDL_RENDERER_PRESENTVSYNC : 0)
+  ))) {
     fprintf(stderr, "SDL_CreateRenderer() error: %s\n", SDL_GetError());
     result = 5;
     goto exit;
   }
 
-  cb_ivec2_t bounds;
-  if (SDL_GetCurrentRenderOutputSize(renderer, &bounds.x, &bounds.y) < 0) {
+  if (SDL_GetCurrentRenderOutputSize(renderer, &simulation_settings.bounds.x, &simulation_settings.bounds.y) < 0) {
     fprintf(stderr, "SDL_GetCurrentRenderOutputSize() error: %s\n", SDL_GetError());
     result = 6;
     goto exit;
@@ -137,14 +157,7 @@ int main(int argc, char* argv[]) {
       .draw_line = cb_draw_line,
       .draw_triangle = cb_draw_triangle,
     },
-    &(cb_simulation_settings_t){
-      .bounds = bounds,
-      .traffic_weight = cb_connection_weight_sqrt,
-      .distance_weight = cb_connection_weight_linear,
-      .optimal_node_count = 100u,
-      .create_destroy_nodes = true,
-      .package_of_death = true,
-    }
+    &simulation_settings
   );
 
   bool quit = false;
