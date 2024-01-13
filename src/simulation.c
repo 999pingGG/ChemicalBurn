@@ -4,6 +4,7 @@
 #include "chemicalburn/package.h"
 #include "chemicalburn/simulation.h"
 #include "chemicalburn/util.h"
+#include "chemicalburn/video.h"
 
 #include <stc/algorithm.h>
 
@@ -94,11 +95,9 @@ static cb_package_t* generate_package(cb_simulation_t* simulation, const bool of
 
 void cb_simulation_init(
   cb_simulation_t* simulation,
-  const cb_drawing_functions_t* drawing_functions,
   const cb_simulation_settings_t* settings
 ) {
   *simulation = (cb_simulation_t){
-    .drawing_functions = *drawing_functions,
     .settings = *settings,
   };
 
@@ -152,23 +151,14 @@ static void routing_thread(cb_simulation_t* simulation) {
     cb_package_t* package = cb_package_queue_pull(&simulation->packages_to_route);
 
     cb_node_t* current_node = cb_get_current_node(package);
-    if (!current_node) {
-      // This should never happen, but it does randomly in rare cases and I don't know why...
-      cb_package_set_iter result;
-      c_find_if(cb_package_set, simulation->packages, &result, *value == package);
-      CB_DEBUG_LOG(
-        "current_node is null, package %p, contained in simulation->packages: %s\n",
-        package,
-        result.ref ? "true" : "false"
-      );
-      continue;
-    }
     cb_connection_t* next_connection = cb_search_connection(simulation, current_node, package->destination);
     cb_set_connection(package, next_connection, next_connection->node1 == current_node);
   }
 }
 
 static void step_packages(cb_simulation_t* simulation) {
+  cb_package_set packages_to_erase = { 0 };
+
   c_foreach(it, cb_package_set, simulation->packages) {
     cb_package_t* package = *it.ref;
 
@@ -176,7 +166,7 @@ static void step_packages(cb_simulation_t* simulation) {
     if (!current_node)
       cb_step_package(package);
     else {
-      if (package->is_package_of_death && cb_node_vec_size(&simulation->nodes) > 3) {
+      if (package->is_package_of_death) {
         add_node_to_destroy_list(simulation, current_node);
         if (current_node == package->destination)
           redirect_package_away_from_node(simulation, package, current_node);
@@ -184,20 +174,28 @@ static void step_packages(cb_simulation_t* simulation) {
 
       cb_increment_weight(package->current_connection);
 
-      const cb_node_t* destination = package->destination;
-      if (current_node == destination) {
+      if (current_node == package->destination) {
         // Package has arrived to its destination.
+
+        // Packages of death never arrive to a final destination.
+        CB_ASSERT(!package->is_package_of_death);
+
         simulation->package_steps += simulation->step - package->start_step;
         simulation->delivered_packages++;
 
         cb_set_connection(package, NULL, false);
 
-        cb_package_set_erase(&simulation->packages, package);
+        cb_package_set_push(&packages_to_erase, package);
         free(package);
       } else
         cb_package_queue_push(&simulation->packages_to_route, package);
     }
   }
+
+  c_foreach(it, cb_package_set, packages_to_erase) {
+    cb_package_set_erase(&simulation->packages, *it.ref);
+  }
+  cb_package_set_drop(&packages_to_erase);
 
   routing_thread(simulation);
 }
@@ -407,7 +405,7 @@ void cb_draw_nodes(const cb_simulation_t* simulation) {
 
   c_foreach(it, cb_node_vec, simulation->nodes) {
     const cb_node_t* node = *it.ref;
-    simulation->drawing_functions.fill_rect(
+    cb_fill_frect(
       &(cb_frect_t){
         .x = node->position.x - CB_NODE_HALF_SIZE,
         .y = node->position.y - CB_NODE_HALF_SIZE,
@@ -416,11 +414,21 @@ void cb_draw_nodes(const cb_simulation_t* simulation) {
       },
       &white
     );
+    if (simulation->settings.show_stats) {
+      char id_string[12];
+      snprintf(id_string, sizeof(id_string), "%u", node->id);
+      cb_draw_text(
+        id_string,
+        node->position.x,
+        node->position.y + CB_NODE_HALF_SIZE,
+        cb_upper_middle,
+        &white);
+    }
   }
 
   c_foreach(it, cb_node_vec, simulation->destroy_nodes) {
     const cb_node_t* node = *it.ref;
-    simulation->drawing_functions.fill_rect(
+    cb_fill_frect(
       &(cb_frect_t){
         .x = node->position.x - CB_NODE_HALF_SIZE,
         .y = node->position.y - CB_NODE_HALF_SIZE,
@@ -429,6 +437,16 @@ void cb_draw_nodes(const cb_simulation_t* simulation) {
       },
       &red
     );
+    if (simulation->settings.show_stats) {
+      char id_string[12];
+      snprintf(id_string, sizeof(id_string), "%u", node->id);
+      cb_draw_text(
+        id_string,
+        node->position.x,
+        node->position.y + CB_NODE_HALF_SIZE,
+        cb_upper_middle,
+        &red);
+    }
   }
 }
 
@@ -448,7 +466,7 @@ void cb_draw_connections(const cb_simulation_t* simulation) {
       connection->will_remove
       ? (SDL_Color){ 255, 0, 0, alpha }
       : (SDL_Color){ 255, 255, 255, alpha };
-    simulation->drawing_functions.draw_line(
+    cb_draw_line(
       &connection->node1->position,
       &connection->node2->position,
       real_width,
@@ -490,9 +508,9 @@ void cb_draw_packages(const cb_simulation_t* simulation) {
           .y = point.y + CB_PACKAGE_SIZE,
         },
       };
-      simulation->drawing_functions.draw_triangle(vertices, &package->color);
+      cb_draw_triangle(vertices, &package->color);
     } else {
-      simulation->drawing_functions.fill_rect(
+      cb_fill_frect(
         &(cb_frect_t){
           .x = point.x - CB_PACKAGE_HALF_SIZE,
           .y = point.y - CB_PACKAGE_HALF_SIZE,

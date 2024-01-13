@@ -13,25 +13,29 @@
 #define CB_DEFAULT_SETTINGS \
   "#### Simulation settings ####\n" \
   "\n" \
-  "# Possible values are linear, sqrt, sqr, exp, log, bell\n" \
+  "# Possible values are \"linear\", \"sqrt\", \"sqr\", \"exp\", \"log\" and \"bell\".\n" \
   "# Default: sqrt\n" \
   "traffic_weighting=sqrt\n" \
   "\n" \
-  "# Possible values are linear, sqrt, sqr, exp, log\n" \
+  "# Possible values are \"linear\", \"sqrt\", \"sqr\", \"exp\" and \"log\".\n" \
   "# Default: linear\n" \
   "distance_weighting=linear\n" \
   "\n" \
-  "# Possible values are 0 and 1\n" \
+  "# Possible values are 0 and 1.\n" \
   "# Default: 1\n" \
   "create_and_destroy_nodes_at_random=1\n" \
   "\n" \
-  "# Possible values are 0 and 1\n" \
+  "# Possible values are 0 and 1.\n" \
   "# Default: 1\n" \
   "package_of_death=1\n" \
   "\n" \
-  "# Possible values are 2 and higher.\n" \
+  "# Possible values are integer numbers equal to 2 or higher.\n" \
   "# Default: 100\n" \
   "number_of_nodes=100\n" \
+  "\n" \
+  "# Possible values are 0 and 1.\n" \
+  "# Default: 0\n" \
+  "show_stats=0\n" \
   "\n" \
   "\n" \
   "#### Video settings ####\n" \
@@ -48,7 +52,11 @@
   "# Default: 1024\n" \
   "width=1024\n" \
   "# Default: 768\n" \
-  "height=768\n"
+  "height=768\n" \
+  "\n" \
+  "# Possible values are integer or fractional numbers greater than zero.\n"                \
+  "# Default: 1\n" \
+  "text_scale=1\n"
 
 #define CB_DEFAULT_SETTINGS_LENGTH (sizeof(CB_DEFAULT_SETTINGS) - 1)
 
@@ -78,6 +86,7 @@ void cb_parse_settings(
     char buffer[CB_SETTINGS_FILE_MAX_SIZE];
     *buffer = '\0';
     int int_buffer;
+    float float_buffer;
 
     if (sscanf(token, " %s", buffer) == EOF)
       // Ignore blank lines.
@@ -97,6 +106,8 @@ void cb_parse_settings(
       simulation_settings->package_of_death = int_buffer;
     else if (sscanf(token, " number_of_nodes = %i", &int_buffer) == 1)
       simulation_settings->optimal_node_count = CB_MAX(int_buffer, 2);
+    else if (sscanf(token, " show_stats = %i", &int_buffer) == 1)
+      simulation_settings->show_stats = int_buffer;
     else if (sscanf(token, " vsync = %i", &int_buffer) == 1)
       video_settings->vsync = int_buffer;
     else if (sscanf(token, " fullscreen = %i", &int_buffer) == 1)
@@ -105,6 +116,8 @@ void cb_parse_settings(
       simulation_settings->bounds.x = video_settings->viewport_size.x = int_buffer;
     else if (sscanf(token, " height = %i", &int_buffer) == 1)
       simulation_settings->bounds.y = video_settings->viewport_size.y = int_buffer;
+    else if (sscanf(token, " text_scale = %f", &float_buffer) == 1)
+      video_settings->text_scale = float_buffer;
   } while ((token = strtok(NULL, "\n")));
 
   if (simulation_settings->distance_weight == cb_connection_weight_bell)
@@ -122,10 +135,12 @@ void cb_settings_read_from_storage(cb_simulation_settings_t* simulation_settings
     .optimal_node_count = 100u,
     .create_destroy_nodes = true,
     .package_of_death = true,
+    .show_stats = false,
   };
 
   *video_settings = (cb_video_settings_t){
     .viewport_size = simulation_settings->bounds,
+    .text_scale = 1.0f,
     .vsync = true,
     .fullscreen = true,
   };

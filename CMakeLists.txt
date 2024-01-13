@@ -31,6 +31,8 @@ add_executable(ChemicalBurn
   include/chemicalburn/cb_math.h
   src/cb_math.c
   src/settings.c
+  include/chemicalburn/video.h
+  src/video.c
 )
 
 find_package(SDL3 REQUIRED CONFIG REQUIRED COMPONENTS SDL3)

@@ -24,11 +24,12 @@ typedef struct cb_simulation_settings_t {
   cb_ivec2_t bounds;
   cb_curve traffic_weight, distance_weight;
   unsigned optimal_node_count;
-  bool create_destroy_nodes, package_of_death;
+  bool create_destroy_nodes, package_of_death, show_stats;
 } cb_simulation_settings_t;
 
 typedef struct cb_video_settings_t {
   cb_ivec2_t viewport_size;
+  float text_scale;
   bool vsync, fullscreen;
 } cb_video_settings_t;
 
