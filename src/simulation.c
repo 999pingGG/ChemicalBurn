@@ -11,6 +11,8 @@
 #define i_TYPE cb_node_set, cb_node_t*
 #include <stc/hset.h>
 
+#include <stdio.h>
+
 #define CB_NODE_CHANGE_INTERVAL 45
 #define CB_PACKAGE_GENERATE_INTERVAL 60
 #define CB_NODE_SIZE 6.0f
