@@ -10,7 +10,7 @@
 #include <stdio.h>
 #include <time.h>
 
-#define CB_TARGET_FPS 99999
+#define CB_TARGET_FPS 30
 #define CB_FRAME_BUDGET (1000000000 / CB_TARGET_FPS)
 
 int main(int argc, char* argv[]) {
@@ -29,6 +29,7 @@ int main(int argc, char* argv[]) {
   cb_simulation_init(&simulation, &simulation_settings);
 
   bool quit = false;
+  const Uint64 time_at_start = SDL_GetTicksNS();
   Uint64 time_at_last_frame = SDL_GetTicksNS();
   SDL_Event event;
   static Uint64 delta_time = 0;
@@ -52,15 +53,20 @@ int main(int argc, char* argv[]) {
       const intptr_t nodes = cb_node_vec_size(&simulation.nodes);
       const intptr_t destroy_nodes = cb_node_vec_size(&simulation.destroy_nodes);
 
+      double current_time = (double)(SDL_GetTicksNS() - time_at_start) / 1e9;
       char text_buffer[1000];
       snprintf(
         text_buffer,
         sizeof(text_buffer),
         "%.2f FPS, %.2f ms\n"
+        "%.2f seconds elapsed, step %u, %.2f steps per second so far\n"
         "%" PRIiPTR " nodes, %" PRIiPTR " nodes to destroy, %" PRIiPTR " total nodes\n"
         "%" PRIiPTR " packages, %" PRIuMAX " package steps, %" PRIuMAX " delivered packages",
         1e9 / (double)delta_time,
         (double)delta_time / 1e6,
+        current_time,
+        simulation.step,
+        simulation.step / current_time,
         nodes,
         destroy_nodes,
         nodes + destroy_nodes,
