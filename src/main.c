@@ -10,7 +10,7 @@
 #include <stdio.h>
 #include <time.h>
 
-#define CB_TARGET_FPS 30
+#define CB_TARGET_FPS 99999
 #define CB_FRAME_BUDGET (1000000000 / CB_TARGET_FPS)
 
 int main(int argc, char* argv[]) {
@@ -58,7 +58,7 @@ int main(int argc, char* argv[]) {
         sizeof(text_buffer),
         "%.2f FPS, %.2f ms\n"
         "%" PRIiPTR " nodes, %" PRIiPTR " nodes to destroy, %" PRIiPTR " total nodes\n"
-        "%" PRIiPTR " packages, %.2f package steps, %.2f delivered packages",
+        "%" PRIiPTR " packages, %" PRIuMAX " package steps, %" PRIuMAX " delivered packages",
         1e9 / (double)delta_time,
         (double)delta_time / 1e6,
         nodes,

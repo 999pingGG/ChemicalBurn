@@ -17,7 +17,7 @@ typedef struct cb_simulation_t {
   cb_connections_map node_connections;
   cb_package_set packages;
   cb_package_queue packages_to_route;
-  double package_steps, delivered_packages;
+  uintmax_t package_steps, delivered_packages;
   cb_package_t* package_of_death;
   unsigned step;
 } cb_simulation_t;

@@ -188,14 +188,15 @@ static void step_packages(cb_simulation_t* simulation) {
         cb_set_connection(package, NULL, false);
 
         cb_package_set_push(&packages_to_erase, package);
-        free(package);
       } else
         cb_package_queue_push(&simulation->packages_to_route, package);
     }
   }
 
   c_foreach(it, cb_package_set, packages_to_erase) {
-    cb_package_set_erase(&simulation->packages, *it.ref);
+    cb_package_t* package = *it.ref;
+    cb_package_set_erase(&simulation->packages, package);
+    free(package);
   }
   cb_package_set_drop(&packages_to_erase);
 
@@ -380,14 +381,7 @@ cb_connection_t* cb_search_connection(cb_simulation_t* simulation, cb_node_t* sr
   return NULL;
 }
 
-static void decay_stats(cb_simulation_t* simulation) {
-  static const double factor = 0.99;
-  simulation->package_steps *= factor;
-  simulation->delivered_packages *= factor;
-}
-
 void cb_step(cb_simulation_t* simulation) {
-  decay_stats(simulation);
   step_packages(simulation);
 
   if (simulation->settings.create_destroy_nodes) {
