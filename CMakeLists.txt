@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.9.6)
 project(ChemicalBurn C)
 
 set(CMAKE_C_STANDARD 17)
@@ -34,6 +34,15 @@ add_executable(ChemicalBurn
   include/chemicalburn/video.h
   src/video.c
 )
+
+include(CheckIPOSupported)
+check_ipo_supported(RESULT IPO_SUPPORTED OUTPUT IPO_ERROR)
+if (IPO_SUPPORTED)
+  message(STATUS "IPO is enabled")
+  set_property(TARGET ChemicalBurn PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
+else()
+  message(WARNING "IPO is not supported: ${IPO_ERROR}")
+endif()
 
 find_package(SDL3 REQUIRED CONFIG REQUIRED COMPONENTS SDL3)
 target_link_libraries(ChemicalBurn PRIVATE SDL3::SDL3)
