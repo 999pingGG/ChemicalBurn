@@ -313,11 +313,7 @@ int cb_video_init(cb_video_settings_t* settings) {
   }
   printf("\nUsing %s.\n", SDL_GetRenderDriver(0));
 
-  if (!(renderer = SDL_CreateRenderer(
-    window,
-    SDL_GetRenderDriver(0),
-    SDL_RENDERER_ACCELERATED | (settings->vsync ? SDL_RENDERER_PRESENTVSYNC : 0)
-  ))) {
+  if (!(renderer = SDL_CreateRenderer(window, NULL))) {
     fprintf(stderr, "SDL_CreateRenderer() error: %s\n", SDL_GetError());
     cb_video_release();
     return 5;

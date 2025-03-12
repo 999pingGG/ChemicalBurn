@@ -12,7 +12,7 @@ typedef struct cb_ivec2_t {
 
 typedef SDL_FRect cb_frect_t;
 
-typedef SDL_Color cb_color_t;
+typedef SDL_FColor cb_color_t;
 
 void cb_vec2_plus(const cb_vec2_t* a, const cb_vec2_t* b, cb_vec2_t* result);
 

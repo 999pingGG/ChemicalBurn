@@ -153,26 +153,26 @@ void cb_settings_read_from_storage(cb_simulation_settings_t* simulation_settings
   snprintf(path, sizeof(path), "%s%s", pref_path, CB_SETTINGS_FILE_NAME);
   SDL_free(pref_path);
 
-  SDL_RWops* file = SDL_RWFromFile(path, "rt");
+  SDL_IOStream* file = SDL_IOFromFile(path, "rt");
   if (!file) {
     printf("%s\nTrying to create it...\n", SDL_GetError());
     SDL_ClearError();
 
-    file = SDL_RWFromFile(path, "wt");
+    file = SDL_IOFromFile(path, "wt");
     if (!file) {
       fprintf(stderr, "%s\n", SDL_GetError());
       SDL_ClearError();
       return;
     }
 
-    if (SDL_RWwrite(file, CB_DEFAULT_SETTINGS, CB_DEFAULT_SETTINGS_LENGTH) < CB_DEFAULT_SETTINGS_LENGTH) {
-      fprintf(stderr, "SDL_RWwrite() error: %s\n", SDL_GetError());
+    if (SDL_WriteIO(file, CB_DEFAULT_SETTINGS, CB_DEFAULT_SETTINGS_LENGTH) < CB_DEFAULT_SETTINGS_LENGTH) {
+      fprintf(stderr, "SDL_WriteIO() error: %s\n", SDL_GetError());
       SDL_ClearError();
     }
   } else {
     char contents[CB_SETTINGS_FILE_MAX_SIZE] = { 0 };
-    if (SDL_RWread(file, contents, sizeof(contents)) == -1) {
-      fprintf(stderr, "SDL_RWread() failed: %s\n", SDL_GetError());
+    if (SDL_ReadIO(file, contents, sizeof(contents)) == -1) {
+      fprintf(stderr, "SDL_ReadIO() failed: %s\n", SDL_GetError());
       SDL_ClearError();
       goto exit;
     }
@@ -181,8 +181,8 @@ void cb_settings_read_from_storage(cb_simulation_settings_t* simulation_settings
   }
 
   exit:
-  if (SDL_RWclose(file) < 0) {
-    fprintf(stderr, "SDL_RWclose() failed: %s\n", SDL_GetError());
+  if (SDL_CloseIO(file) < 0) {
+    fprintf(stderr, "SDL_CloseIO() failed: %s\n", SDL_GetError());
     SDL_ClearError();
   }
 }
