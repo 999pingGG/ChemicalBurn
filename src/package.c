@@ -68,9 +68,9 @@ void cb_step_package(cb_package_t* package) {
 void cb_set_package_of_death(cb_package_t* package) {
   package->is_package_of_death = true;
   package->color = (cb_color_t){
-    .r = 255,
-    .g = 0,
-    .b = 0,
-    .a = 255,
+    .r = 1.0f,
+    .g = 0.0f,
+    .b = 0.0f,
+    .a = 1.0f,
   };
 }

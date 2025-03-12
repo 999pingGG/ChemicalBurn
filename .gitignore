@@ -137,3 +137,5 @@ fabric.properties
 
 # Fuzzer crash reports
 crash-*
+
+android-project

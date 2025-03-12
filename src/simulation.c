@@ -396,8 +396,8 @@ void cb_step(cb_simulation_t* simulation) {
 }
 
 void cb_draw_nodes(const cb_simulation_t* simulation) {
-  const static cb_color_t white = { 255, 255, 255, 255 };
-  const static cb_color_t red = { 128, 0, 0, 255 };
+  const static cb_color_t white = { 1.0f, 1.0f, 1.0f, 1.0f };
+  const static cb_color_t red = { 0.5f, 0.0f, 0.0f, 1.0f };
 
   c_foreach(it, cb_node_vec, simulation->nodes) {
     const cb_node_t* node = *it.ref;
@@ -456,12 +456,12 @@ void cb_draw_connections(const cb_simulation_t* simulation) {
       continue;
 
     const float real_width = CB_MAX(width, 1.0f);
-    const Uint8 alpha = (Uint8)(CB_MIN(width, 1.0f) * 255.f);
+    const float alpha = CB_MIN(width, 1.0f);
 
-    SDL_Color color =
+    cb_color_t color =
       connection->will_remove
-      ? (SDL_Color){ 255, 0, 0, alpha }
-      : (SDL_Color){ 255, 255, 255, alpha };
+      ? (cb_color_t){ 1.0f, 0.0f, 0.0f, alpha }
+      : (cb_color_t){ 1.0f, 1.0f, 1.0f, alpha };
     cb_draw_line(
       &connection->node1->position,
       &connection->node2->position,

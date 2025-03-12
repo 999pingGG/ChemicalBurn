@@ -74,7 +74,7 @@ int main(int argc, char* argv[]) {
         simulation.package_steps,
         simulation.delivered_packages
       );
-      cb_draw_text(text_buffer, 0.0f, 0.0f, cb_upper_left, &(cb_color_t){ 255, 0, 255, 255 });
+      cb_draw_text(text_buffer, 0.0f, 0.0f, cb_upper_left, &(cb_color_t){ 1.0f, 0.0f, 1.0f, 1.0f });
     }
 
     cb_end_frame();
